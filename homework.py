@@ -38,8 +38,9 @@ HOMEWORK_STATUSES = {
     'rejected': 'Работа проверена: у ревьюера есть замечания.'
 }
 
+
 def send_message(bot, message):
-    '''Функция отвечает за отправку сообщений.'''
+    """Функция отвечает за отправку сообщений."""
     try:
         bot.send_message(TELEGRAM_CHAT_ID, message)
     except Exception as e:
@@ -47,8 +48,9 @@ def send_message(bot, message):
         raise RuntimeError(msg)
     return True
 
+
 def get_api_answer(current_timestamp):
-    '''Функция делает запрос к api.'''
+    """Функция делает запрос к api."""
     timestamp = current_timestamp
     params = {'from_date': timestamp}
     headers = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
@@ -60,11 +62,12 @@ def get_api_answer(current_timestamp):
         try:
             response = get_answer.json()
         except Exception as e:
-            raise RuntimeError('Не удалось сделать запрос к API, ошибка {e}')
+            raise RuntimeError(f'Не удалось сделать запрос к API, ошибка {e}')
     return response
 
+
 def check_response(response):
-    '''Функция определяет корректность ответа.'''
+    """Функция определяет корректность ответа."""
     homeworks = response['homeworks']
     if type(homeworks) is not list:
         logging.error('Получен не спиок, ошибка}')
@@ -72,8 +75,9 @@ def check_response(response):
     homework = homeworks
     return homework
 
+
 def parse_status(homework):
-    '''Функция определяет статус домашней работы.'''
+    """Функция определяет статус домашней работы."""
     homework_name = homework['homework_name']
     homework_status = homework['status']
     for status, result in HOMEWORK_STATUSES.items():
@@ -82,12 +86,13 @@ def parse_status(homework):
                 verdict = result
                 break
         except Exception as e:
-            raise KeyError('Неизветный статус домашней работы')
+            raise KeyError(f'Неизветный статус домашней работы. {e}')
     message = f'Изменился статус проверки работы "{homework_name}". {verdict}'
     return message
 
+
 def check_tokens():
-    ''''Функция определяет наличие переменных окружения.'''
+    """Функция определяет наличие переменных окружения."""
     var = [PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID]
     check = True
     for i in var:
@@ -96,14 +101,15 @@ def check_tokens():
             logging.critical('Доступны не все переменные окружения')
     return check
 
+
 def main():
-    '''Основная логика работы бота.'''
+    """Основная логика работы бота."""
     new_error = []
     old_error = []
     current_timestamp = int(time.time())
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     check = check_tokens()
-    if check == False:
+    if check is False:
         raise NameError('Доступны не все переменные окружения')
     while True:
         try:
@@ -113,7 +119,7 @@ def main():
                 homework = homeworks[0]
                 message = parse_status(homework)
                 status = send_message(bot, message)
-                if status == True:
+                if status is True:
                     logging.info('Cообщение отправлено!')
             else:
                 logging.debug('Статус домашки не изменился')
@@ -132,6 +138,7 @@ def main():
                 old_error = new_error.copy()
                 new_error.clear()
             time.sleep(RETRY_TIME)
+
 
 if __name__ == '__main__':
     main()
